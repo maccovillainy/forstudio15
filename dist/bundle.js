@@ -71,12 +71,13 @@
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__css_style_css__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__css_style_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__css_style_css__);
-
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__App__ = __webpack_require__(7);
 __webpack_require__(1);
 
 
-var hello = document.getElementById("hello");
-hello.innerHTML = "Hello from Webpack!";
+
+
+new __WEBPACK_IMPORTED_MODULE_1__App__["a" /* default */]();
 
 /***/ }),
 /* 1 */
@@ -143,7 +144,7 @@ exports = module.exports = __webpack_require__(4)(false);
 
 
 // module
-exports.push([module.i, "#hello {\n  font-weight: bold;\n}\n", ""]);
+exports.push([module.i, "* {\r\n  box-sizing: border-box;\r\n}\r\n\r\n.container {\r\n  max-width: 1000px;\r\n  margin: auto;\r\n}\r\n\r\n.navigation {\r\n  display: flex;\r\n  margin: 15px -5px 25px;\r\n}\r\n\r\n.navigation__item  {\r\n  margin: 0 5px;\r\n  padding: 5px 10px;\r\n  background-color: #17a2b8;\r\n  color: #fff;\r\n  font-size: 18px;\r\n  cursor: pointer;\r\n}\r\n\r\n.navigation__item:hover   {\r\n  background-color: #138496;\r\n}\r\n\r\n.content {\r\n\r\n}\r\n\r\n.content__title {\r\n  font-size: 32px;\r\n  font-weight: bold;\r\n}\r\n\r\n.content__date {\r\n  margin-bottom: 10px;\r\n}\r\n\r\n.content__img {\r\n  max-width: 100%;\r\n}", ""]);
 
 // exports
 
@@ -709,6 +710,179 @@ module.exports = function (css) {
 	// send back the fixed css
 	return fixedCss;
 };
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__api__ = __webpack_require__(8);
+
+
+class App {
+    constructor() {
+        this.currentPage = this.getCurrentPage();
+        this.$content = document.getElementById('content');
+        this.$prev = document.getElementById('prev');
+        this.$next = document.getElementById('next');
+        this.$first = document.getElementById('first');
+        this.$last = document.getElementById('last');
+        this.$random = document.getElementById('random');
+        this.minPage = 1;
+        this.maxPage = null;
+
+        this.nextHandler = this.nextHandler.bind(this);
+        this.prevHandler = this.prevHandler.bind(this);
+        this.firstHandler = this.firstHandler.bind(this);
+        this.lastHandler = this.lastHandler.bind(this);
+        this.randomHandler = this.randomHandler.bind(this);
+
+        this.init();
+    }
+
+    getCurrentPage() {
+        const [_, page] = location.hash.split('#');
+
+        return parseInt(page) || 0;
+    }
+
+    getFormattedDate(year, month, day) {
+        return `${('0' + day).slice(-2)}.${('0' + month).slice(-2)}.${year}`;
+    }
+
+    renderComics({ alt, img, title, day, month, year, num }) {
+        location.hash = num;
+        this.currentPage = num;
+
+        const date = this.getFormattedDate(year, month, day);
+
+        this.$content.innerHTML = `
+            <div class="content">
+                <div class="content__title">${title}</div>
+                <div class="content__date">${date}</div>
+                <img class="content__img" alt="${alt}" src="${img}">
+            </div>
+        `;
+    }
+
+    async getCommicsAsync(page) {
+        try {
+            if (page) {
+                const resp = await __WEBPACK_IMPORTED_MODULE_0__api__["a" /* default */].comics.getComicsByPage(page);
+                this.renderComics(resp);
+            } else {
+                const resp = await __WEBPACK_IMPORTED_MODULE_0__api__["a" /* default */].comics.getCurrentComics();
+                this.renderComics(resp);
+            }
+        } catch (e) {
+            alert('Ошибка при загрузке');
+        }
+    }
+
+    nextHandler() {
+        if (this.currentPage < this.maxPage) {
+            this.getCommicsAsync(this.currentPage + 1);
+        }
+    }
+
+    prevHandler() {
+        if (this.currentPage > this.minPage) {
+            this.getCommicsAsync(this.currentPage - 1);
+        }
+    }
+
+    firstHandler() {
+        this.getCommicsAsync(this.minPage);
+    }
+
+    lastHandler() {
+        this.getCommicsAsync(this.maxPage);
+    }
+
+    randomHandler() {
+        const page = Math.floor(Math.random() * (this.maxPage - this.minPage + 1)) + this.minPage;
+        this.getCommicsAsync(page);
+    }
+
+    initListeners() {
+        this.$next.addEventListener('click', this.nextHandler);
+        this.$prev.addEventListener('click', this.prevHandler);
+        this.$first.addEventListener('click', this.firstHandler);
+        this.$last.addEventListener('click', this.lastHandler);
+        this.$random.addEventListener('click', this.randomHandler);
+    }
+
+    async getMaxPageAsync() {
+        const { num } = await __WEBPACK_IMPORTED_MODULE_0__api__["a" /* default */].comics.getCurrentComics();
+        return num;
+    }
+
+    async init() {
+        this.maxPage = await this.getMaxPageAsync();
+        this.initListeners();
+        await this.getCommicsAsync(this.currentPage);
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = App;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__comics__ = __webpack_require__(9);
+
+
+class Api {
+    constructor() {
+        this.comics = new __WEBPACK_IMPORTED_MODULE_0__comics__["a" /* default */]();
+    }
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (new Api());
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__base__ = __webpack_require__(10);
+
+
+class Comics extends __WEBPACK_IMPORTED_MODULE_0__base__["a" /* default */] {
+    constructor() {
+        super();
+    }
+
+    getCurrentComics() {
+        let url = 'https://xkcd.com/info.0.json';
+        return this.makeRequest(url);
+    }
+
+    getComicsByPage(page) {
+        let url = `https://xkcd.com/${page}/info.0.json`;
+
+        return this.makeRequest(url);
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Comics;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+class Base {
+    constructor() {}
+
+    makeRequest(url) {
+        return fetch(url).then(response => response.json());
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Base;
 
 
 /***/ })

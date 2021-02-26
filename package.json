@@ -4,6 +4,7 @@
   "description": "test",
   "main": "index.js",
   "scripts": {
+    "build": "webpack",
     "dev": "webpack-dev-server"
   },
   "author": "Max",
